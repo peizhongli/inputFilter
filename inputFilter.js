@@ -20,6 +20,7 @@ const getLength = (val) => {
 };
 // 按照字节长度裁剪字符串
 const cutStr = (str, len) => {
+
   let num = 0;
   let str1 = str;
   let newStr = '';
@@ -41,27 +42,38 @@ const addListener = function (el, type, fn) {
 
 const lengthFilter = function (el) {
   let maxLen = 0; // 初始时设置的最大长度
-  let flag = false; // 用于拦截检测到文字超长的标识
+  let maxFlag = false; // 用于拦截检测到文字超长的标识
+  let inputFlag = false; // 用于标识中文拼音的输入
   addListener(el, 'focus', () => {
     maxLen = el.getAttribute('maxlength')
     el.setAttribute('maxlength', maxLen * 2)
   })
   addListener(el, 'keydown', () => {
     let curLen = getLength(el.value)
-    if(curLen>=maxLen*2) {
-      flag = true;
+    if (curLen >= maxLen * 2) {
+      maxFlag = true;
     } else {
-      flag = false;
+      maxFlag = false;
     }
   })
+  addListener(el, 'compositionstart', () => {
+    inputFlag = true;
+  })
   addListener(el, 'compositionend', () => {
-    if(flag) {
-      el.value = cutStr(el.value,maxLen*2)
+    inputFlag = false;
+    if (maxFlag) {
+      el.value = cutStr(el.value, maxLen * 2)
+    }
+  })
+  addListener(el, 'input', () => {
+    if (maxFlag && !inputFlag) {
+      el.value = cutStr(el.value, maxLen * 2)
     }
   })
   addListener(el, 'blur', () => {
     el.setAttribute('maxlength', maxLen)
   })
+  
 }
 export default {
   bind(el, binding) {
